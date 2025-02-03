@@ -51,28 +51,15 @@ model User {
   sessions      Session[]
   createdTasks  Task[]         @relation("CreatorTasks")
   assignedTasks Task[]         @relation("AssignedTasks")
-  projects      Project[]      @relation("ProjectMembers")
   notifications Notification[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt @default(now())
-  Project   Project[]
+  
   Comment   Comment[]
 }
 
-model Project {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt @default(now())
 
-  createdBy   User   @relation(fields: [createdById], references: [id])
-  createdById String
-
-  tasks   Task[]
-  members User[] @relation("ProjectMembers")
-}
 
 model Task {
   id          String     @id @default(cuid())
@@ -83,9 +70,6 @@ model Task {
   deadline    DateTime?
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt @default(now())
-
-  project   Project @relation(fields: [projectId], references: [id])
-  projectId String
 
   createdBy   User   @relation(name: "CreatorTasks", fields: [createdById], references: [id])
   createdById String

@@ -1,12 +1,20 @@
 import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
 import Link from "next/link";
+import { title } from "process";
 
 import { api } from "~/utils/api";
 
+
 export default function Home() {
   const hello = api.post.hello.useQuery({ text: "from tRPC" });
-
+  // const projects = api.project.getAll.useQuery();
+  const users = api.user.getAll.useQuery();
+  console.log(users);
+  const tasks = api.task.getAll.useQuery();
+  // console.log(projects.data ? projects.data[0] : "", "saket")
+  
+  //handleCreateProject();
   return (
     <>
       <Head>
@@ -56,6 +64,40 @@ export default function Home() {
 }
 
 function AuthShowcase() {
+  enum Priority {
+    LOW = "LOW",
+    MEDIUM = "MEDIUM",
+    HIGH = "HIGH",
+  }
+
+  enum TaskStatus {
+    TODO = "TODO",
+    IN_PROGRESS = "IN_PROGRESS",
+    DONE = "DONE",
+  }
+
+  const createTask = api.task.create.useMutation({
+    onSuccess: (data) => {
+      console.log("Task created successfully:", data);
+    },
+    onError: (error) => {
+      console.error("Error creating task:", error.message);
+    },
+  });
+
+  const handleCreateTask = () => {
+    const dummyTask = {
+      title: "Dummy Task",
+      description: "This is a dummy task for testing.",
+      priority: Priority.MEDIUM,
+      status: TaskStatus.TODO,
+      deadline: new Date(), // Current date as deadline
+      assignedToId: undefined, // No assignee for now
+      tags: [], // No tags for now
+    };
+
+    createTask.mutate(dummyTask);
+  };
   const { data: sessionData } = useSession();
 
   const { data: secretMessage } = api.post.getSecretMessage.useQuery(
@@ -74,6 +116,12 @@ function AuthShowcase() {
         onClick={sessionData ? () => void signOut() : () => void signIn()}
       >
         {sessionData ? "Sign out" : "Sign in"}
+      </button>
+      <button
+        className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
+        onClick={()=>{ handleCreateTask(); }}
+      >
+        {sessionData ? "Create Task" : "Sign in"}
       </button>
     </div>
   );
