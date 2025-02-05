@@ -4,49 +4,50 @@ import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 export const taskRouter = createTRPCRouter({
   // Create a new task
   create: protectedProcedure
-    .input(
-      z.object({
-        title: z.string().min(1, "Task title is required"),
-        description: z.string().optional(),
-        priority: z.enum(["LOW", "MEDIUM", "HIGH"]),
-        status: z.enum(["TODO", "IN_PROGRESS", "DONE"]).default("TODO"),
-        deadline: z.date().optional(),
-        assignedToId: z.string().optional(), // Optional assignee
-        tags: z.array(z.string()).optional(), // Array of tag IDs
-        projectId: z.string().optional(), // Optional project ID
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { title, description, priority, status, deadline, assignedToId, tags, projectId } = input;
+  .input(
+    z.object({
+      title: z.string().min(1, "Task title is required"),
+      description: z.string().optional(),
+      priority: z.enum(["LOW", "MEDIUM", "HIGH"]),
+      status: z.enum(["TODO", "IN_PROGRESS", "DONE"]).default("TODO"),
+      deadline: z.date().optional(),
+      assignedToId: z.string().optional(), // Optional assignee
+      tags: z.array(z.string()).optional(), // Array of tag IDs
+      projectId: z.string().optional(), // Optional project ID
+    })
+  )
+  .mutation(async ({ ctx, input }) => {
+    const { title, description, priority, status, deadline, assignedToId, tags, projectId } = input;
 
-      const taskData: any = {
-        title,
-        description,
-        priority,
-        status,
-        deadline,
-        createdBy: { connect: { id: ctx.session.user.id } },
-        assignedTo: assignedToId ? { connect: { id: assignedToId } } : undefined,
-        tags: tags
-          ? {
-              create: tags.map((tagId) => ({
-                tag: { connect: { id: tagId } },
-              })),
-            }
-          : undefined,
-      };
+    const taskData: any = {
+      title,
+      description,
+      priority,
+      status,
+      deadline,
+      createdBy: { connect: { id: ctx.session.user.id } },
+      assignedTo: assignedToId ? { connect: { id: assignedToId } } : undefined,
+      tags: tags
+        ? {
+            create: tags.map((tagId) => ({
+              tag: { connect: { id: tagId } },
+            }))
+          }
+        : undefined,
+    };
 
-      // Conditionally add the project field if projectId is provided
-      if (projectId) {
-        taskData.project = { connect: { id: projectId } };
-      }
+    // Add project field based on projectId
+    if (projectId) {
+      taskData.project = { connect: { id: projectId } };
+    }
 
-      const task = await ctx.db.task.create({
-        data: taskData,
-      });
+    const task = await ctx.db.task.create({
+      data: taskData,
+    });
 
-      return task;
-    }),
+    return task;
+  }),
+
 
   // Get all tasks for the current user
   getAll: protectedProcedure.query(async ({ ctx }) => {
@@ -77,10 +78,8 @@ export const taskRouter = createTRPCRouter({
       const task = await ctx.db.task.findUnique({
         where: { id: input.id },
         include: {
-          createdBy: true,
-          assignedTo: true,
-          tags: { include: { tag: true } },
-          comments: { include: { createdBy: true } },
+          createdBy: true, 
+          assignedTo: true, 
           project: true, // Include project details
         },
       });
@@ -91,6 +90,66 @@ export const taskRouter = createTRPCRouter({
 
       return task;
     }),
+
+    getAssignedToUser: protectedProcedure
+  .input(
+    z.object({
+      userId: z.string(),
+      skip: z.number().default(0), // Pagination skip (default: 0)
+      take: z.number().default(10), // Pagination take (default: 10)
+    })
+  )
+  .query(async ({ ctx, input }) => {
+    const { userId, skip, take } = input;
+    const tasks = await ctx.db.task.findMany({
+      where: {
+        assignedToId: userId,
+      },
+      include: {
+        createdBy: true,
+        assignedTo: true,
+        tags: { include: { tag: true } },
+        comments: true,
+        project: true,
+      },
+      skip,
+      take,
+      orderBy: { createdAt: "desc" },
+    });
+
+    return tasks;
+  }),
+
+getReportedByUser: protectedProcedure
+  .input(
+    z.object({
+      userId: z.string(),
+      skip: z.number().default(0), // Pagination skip (default: 0)
+      take: z.number().default(10), // Pagination take (default: 10)
+    })
+  )
+  .query(async ({ ctx, input }) => {
+    const { userId, skip, take } = input;
+    const tasks = await ctx.db.task.findMany({
+      where: {
+        createdById: userId,
+      },
+      include: {
+        createdBy: true,
+        assignedTo: true,
+        tags: { include: { tag: true } },
+        comments: true,
+        project: true,
+      },
+      skip,
+      take,
+      orderBy: { createdAt: "desc" },
+    });
+
+    return tasks;
+  }),
+
+
     
   getByProjectId: protectedProcedure
     .input(z.object({ projectId: z.string() }))

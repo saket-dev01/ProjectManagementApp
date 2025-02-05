@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { useRouter } from "next/router";
 
 // Define the types for the props
 interface Task {
@@ -18,6 +19,14 @@ interface TaskListProps {
 }
 
 const TaskList: React.FC<TaskListProps> = ({ tasks, filter, setFilter, tasksLoading }) => {
+  const router = useRouter();
+  const { projectId }  = router.query;
+  // Handle task click to navigate to the task detail page
+  const handleTaskClick = async (taskId: string) => {    
+    await router.push(`/projects/${projectId}/tasks/${taskId}`);
+  };
+
+
   return (
     <div className="mt-6">
       {/* Task Filter */}
@@ -46,7 +55,11 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, filter, setFilter, tasksLoad
             {tasks
               .filter((task) => filter === "all" || task.status === filter)
               .map((task) => (
-                <Card key={task.id} className="shadow-md">
+                <Card
+                  key={task.id}
+                  className="shadow-md cursor-pointer"
+                  onClick={() => handleTaskClick(task.id)} // Navigate to task detail
+                >
                   <CardHeader>
                     <h3 className="text-md font-bold">{task.title}</h3>
                   </CardHeader>

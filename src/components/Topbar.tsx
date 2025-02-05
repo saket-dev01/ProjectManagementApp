@@ -16,13 +16,19 @@ export default function TopBar() {
     const [open, setOpen] = useState(false);
     const [projectId, setProjectId] = useState<string | null | undefined>(null); // ✅ Track projectId separately
 
-    // ✅ Extract project ID only after router is ready
     useEffect(() => {
-        if (router.isReady) {
-            const id = router.pathname.startsWith("/projects/") ? router.asPath.split("/projects/")[1] : null;
-            setProjectId(id);
-        }
-    }, [router.isReady, router.pathname, router.asPath]);
+      if (router.isReady && router.pathname.startsWith("/projects")) {
+          const segments = router.asPath?.split("/projects/"); // Optional chaining here
+          if (segments!=undefined && segments.length > 1) {
+              setProjectId(segments[1].split("/")[0]); // Extract only the first segment
+          } else {
+              setProjectId(null);
+          }
+      }
+  }, [router.isReady, router.asPath]);
+  
+  
+  
 
     // Fetch projects for search dropdown
     const { data: projects } = api.project.getAll.useQuery();

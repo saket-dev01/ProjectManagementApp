@@ -55,7 +55,31 @@ export const projectRouter = createTRPCRouter({
 
       return updatedProject;
     }),
+    
+    getMembers: protectedProcedure
+    .input(z.object({ projectId: z.string() })) // Expecting projectId as input
+    .query(async ({ ctx, input }) => {
+      const { projectId } = input;
 
+      // Find the project and include the members
+      const project = await ctx.db.project.findUnique({
+        where: { id: projectId },
+        select: {
+          members: {
+            select: {
+              id: true,
+              name: true, // You can include more member fields like email, etc.
+            },
+          },
+        },
+      });
+
+      if (!project) {
+        throw new Error("Project not found");
+      }
+
+      return project.members; // Return the list of members
+    }),
   // Get all projects
   getAll: protectedProcedure.query(async ({ ctx }) => {
     const projects = await ctx.db.project.findMany({
