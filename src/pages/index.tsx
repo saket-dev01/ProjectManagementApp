@@ -2,7 +2,6 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
 import Link from "next/link";
 import { title } from "process";
-
 import { api } from "~/utils/api";
 
 
@@ -85,6 +84,15 @@ function AuthShowcase() {
     },
   });
 
+  const createProject = api.project.create.useMutation({
+    onSuccess: (data) => {
+      console.log("Project created successfully:", data);
+    },
+    onError: (error) => {
+      console.error("Error creating project:", error.message);
+    },
+  });
+
   const handleCreateTask = () => {
     const dummyTask = {
       title: "Dummy Task",
@@ -94,10 +102,22 @@ function AuthShowcase() {
       deadline: new Date(), // Current date as deadline
       assignedToId: undefined, // No assignee for now
       tags: [], // No tags for now
+      projectId: undefined, // No project assigned for now
     };
 
     createTask.mutate(dummyTask);
   };
+
+  const handleCreateProject = () => {
+    const dummyProject = {
+      name: "Dummy Project",
+      description: "This is a dummy project for testing.",
+      createdById: "some-user-id", // Replace with a valid user ID or session user ID
+    };
+
+    createProject.mutate(dummyProject);
+  };
+
   const { data: sessionData } = useSession();
 
   const { data: secretMessage } = api.post.getSecretMessage.useQuery(
@@ -119,9 +139,15 @@ function AuthShowcase() {
       </button>
       <button
         className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
-        onClick={()=>{ handleCreateTask(); }}
+        onClick={() => { handleCreateTask(); }}
       >
         {sessionData ? "Create Task" : "Sign in"}
+      </button>
+      <button
+        className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
+        onClick={() => { handleCreateProject(); }}
+      >
+        {sessionData ? "Create Project" : "Sign in"}
       </button>
     </div>
   );

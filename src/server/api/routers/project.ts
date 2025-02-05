@@ -26,15 +26,39 @@ export const projectRouter = createTRPCRouter({
       return project;
     }),
 
-  // Get all projects for the current user
+  addMember: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        email: z.string().email("Invalid email format"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { projectId, email } = input;
+
+      // Find the user by email
+      const user = await ctx.db.user.findUnique({
+        where: { email },
+      });
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      // Add the user to the project
+      const updatedProject = await ctx.db.project.update({
+        where: { id: projectId },
+        data: {
+          members: { connect: { id: user.id } },
+        },
+      });
+
+      return updatedProject;
+    }),
+
+  // Get all projects
   getAll: protectedProcedure.query(async ({ ctx }) => {
     const projects = await ctx.db.project.findMany({
-    //   where: {
-    //     OR: [
-    //       { createdById: ctx.session.user.id },
-    //       { members: { some: { id: ctx.session.user.id } } },
-    //     ],
-    //   },
       include: {
         members: true,
         tasks: true,

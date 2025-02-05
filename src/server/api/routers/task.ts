@@ -13,28 +13,36 @@ export const taskRouter = createTRPCRouter({
         deadline: z.date().optional(),
         assignedToId: z.string().optional(), // Optional assignee
         tags: z.array(z.string()).optional(), // Array of tag IDs
+        projectId: z.string().optional(), // Optional project ID
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { title, description, priority, status, deadline, assignedToId, tags } = input;
+      const { title, description, priority, status, deadline, assignedToId, tags, projectId } = input;
 
-      const task = await ctx.db.task.create({
-        data: {
-          title,
-          description,
-          priority,
-          status,
-          deadline,
-          createdBy: { connect: { id: ctx.session.user.id } },
-          assignedTo: assignedToId ? { connect: { id: assignedToId } } : undefined,
-          tags: tags
+      const taskData: any = {
+        title,
+        description,
+        priority,
+        status,
+        deadline,
+        createdBy: { connect: { id: ctx.session.user.id } },
+        assignedTo: assignedToId ? { connect: { id: assignedToId } } : undefined,
+        tags: tags
           ? {
               create: tags.map((tagId) => ({
                 tag: { connect: { id: tagId } },
               })),
             }
           : undefined,
-        },
+      };
+
+      // Conditionally add the project field if projectId is provided
+      if (projectId) {
+        taskData.project = { connect: { id: projectId } };
+      }
+
+      const task = await ctx.db.task.create({
+        data: taskData,
       });
 
       return task;
@@ -54,6 +62,7 @@ export const taskRouter = createTRPCRouter({
         assignedTo: true,
         tags: { include: { tag: true } },
         comments: true,
+        project: true, // Include project details
       },
       orderBy: { createdAt: "desc" },
     });
@@ -72,6 +81,7 @@ export const taskRouter = createTRPCRouter({
           assignedTo: true,
           tags: { include: { tag: true } },
           comments: { include: { createdBy: true } },
+          project: true, // Include project details
         },
       });
 
@@ -80,6 +90,24 @@ export const taskRouter = createTRPCRouter({
       }
 
       return task;
+    }),
+    
+  getByProjectId: protectedProcedure
+    .input(z.object({ projectId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const tasks = await ctx.db.task.findMany({
+        where: { projectId: input.projectId },
+        include: {
+          createdBy: true,
+          assignedTo: true,
+          tags: { include: { tag: true } },
+          comments: { include: { createdBy: true } },
+          project: true,
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      return tasks;
     }),
 
   // Update a task
@@ -94,10 +122,11 @@ export const taskRouter = createTRPCRouter({
         deadline: z.date().optional(),
         assignedToId: z.string().optional(),
         tags: z.array(z.string()).optional(),
+        projectId: z.string().optional(), // Optional projectId for updating
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { id, title, description, priority, status, deadline, assignedToId, tags } = input;
+      const { id, title, description, priority, status, deadline, assignedToId, tags, projectId } = input;
 
       const updatedTask = await ctx.db.task.update({
         where: { id },
@@ -109,12 +138,13 @@ export const taskRouter = createTRPCRouter({
           deadline,
           assignedTo: assignedToId ? { connect: { id: assignedToId } } : undefined,
           tags: tags
-          ? {
-              create: tags.map((tagId) => ({
-                tag: { connect: { id: tagId } },
-              })),
-            }
-          : undefined,
+            ? {
+                create: tags.map((tagId) => ({
+                  tag: { connect: { id: tagId } },
+                })),
+              }
+            : undefined,
+          project: projectId ? { connect: { id: projectId } } : undefined, // Update the project if provided
         },
       });
 

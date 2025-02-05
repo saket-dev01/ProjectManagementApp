@@ -20,11 +20,13 @@ export function TaskCreationForm({ onClose }: TaskCreationFormProps) {
   const [date, setDate] = useState<Date>();
   const [priority, setPriority] = useState<"LOW" | "MEDIUM" | "HIGH">("MEDIUM");
   const [assignee, setAssignee] = useState<string | undefined>();
+  const [project, setProject] = useState<string | undefined>();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Fetch users dynamically for the assignee dropdown
+  // Fetch users and projects dynamically
   const { data: users, isLoading: usersLoading } = api.user.getAll.useQuery();
+  const { data: projects, isLoading: projectsLoading } = api.project.getAll.useQuery();
 
   // TRPC Mutation for task creation
   const createTask = api.task.create.useMutation({
@@ -45,6 +47,11 @@ export function TaskCreationForm({ onClose }: TaskCreationFormProps) {
       return;
     }
 
+    if (!project) {
+      setErrorMessage("Please select a project.");
+      return;
+    }
+
     // Reset previous messages before creating the task
     setErrorMessage(null);
     setSuccessMessage(null);
@@ -56,6 +63,7 @@ export function TaskCreationForm({ onClose }: TaskCreationFormProps) {
       status: "TODO",
       deadline: date || undefined,
       assignedToId: assignee || undefined,
+      projectId: project, // Set the selected project ID
       tags: [],
     });
   };
@@ -136,6 +144,22 @@ export function TaskCreationForm({ onClose }: TaskCreationFormProps) {
             {users?.map((user) => (
               <SelectItem key={user.id} value={user.id}>
                 {user.name || "Unknown User"}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="project">Select Project</Label>
+        <Select onValueChange={setProject} disabled={projectsLoading}>
+          <SelectTrigger>
+            <SelectValue placeholder={projectsLoading ? "Loading projects..." : "Select project"} />
+          </SelectTrigger>
+          <SelectContent>
+            {projects?.map((proj) => (
+              <SelectItem key={proj.id} value={proj.id}>
+                {proj.name || "Unnamed Project"}
               </SelectItem>
             ))}
           </SelectContent>
