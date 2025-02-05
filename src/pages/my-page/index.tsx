@@ -3,10 +3,11 @@ import { api } from "~/utils/api"; // Assuming api helper is set up for tasks
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import Router, { useRouter } from "next/router";
 
 export default function Page() {
   const { data: session } = useSession();
-  
+  const router = useRouter();
   // State for pagination
   const [assignedPage, setAssignedPage] = useState(0);
   const [reportedPage, setReportedPage] = useState(0);
@@ -56,7 +57,7 @@ export default function Page() {
                 <h3 className="text-lg font-semibold">{task.title}</h3>
                 <p><strong>Project:</strong> {task.project?.name}</p>
                 <p><strong>Status:</strong> {task.status}</p>
-                <Button className="mt-2" onClick={() => console.log(`Navigate to task ${task.id}`)}>
+                <Button className="mt-2" onClick={ async ()=> {await router.push(`/projects/${task.projectId}/tasks/${task.id}`)}}>
                   View Task
                 </Button>
               </div>
@@ -93,7 +94,7 @@ export default function Page() {
                 <h3 className="text-lg font-semibold">{task.title}</h3>
                 <p><strong>Project:</strong> {task.project?.name}</p>
                 <p><strong>Status:</strong> {task.status}</p>
-                <Button className="mt-2" onClick={() => console.log(`Navigate to task ${task.id}`)}>
+                <Button className="mt-2" onClick={ async ()=> {await router.push(`/projects/${task.projectId}/tasks/${task.id}`)}}>
                   View Task
                 </Button>
               </div>

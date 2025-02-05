@@ -5,10 +5,16 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import { useSession } from "next-auth/react";
 
 export default function TaskDetails() {
+  const session = useSession();
   const router = useRouter();
   const { taskId } = router.query;
+
+  if (!session) {
+    return <div>Please log in to view your Task.</div>;
+  }
 
   const { data: task, isLoading, isError, error } = api.task.getById.useQuery(
     { id: taskId as string }

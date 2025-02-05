@@ -1,4 +1,5 @@
 import { useRouter } from "next/router";
+import { useSession } from "next-auth/react";
 import { api } from "~/utils/api";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -7,11 +8,16 @@ import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 
 export default function ProjectsPage() {
     const router = useRouter();
+    const { data: session } = useSession();
     const [open, setOpen] = useState(false);
     const [newProjectName, setNewProjectName] = useState("");
     const [newProjectDescription, setNewProjectDescription] = useState("");
     const [memberEmail, setMemberEmail] = useState("");
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+
+    if (!session) {
+        return <div>Please log in to view your Projects.</div>;
+      }
 
     // Fetch all projects
     const { data: projects, isLoading, refetch } = api.project.getAll.useQuery();

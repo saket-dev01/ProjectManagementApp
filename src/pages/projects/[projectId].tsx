@@ -5,15 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Loader2, Users, UserPlus } from "lucide-react";
+import { useSession } from "next-auth/react";
 import ProjectMembers from "~/components/ProjectMembers";
 import CreateTaskForm from "~/components/CreateTaskForm";
 import TaskList from "~/components/TaskList";
 import TaskSummaryCard from "~/components/TaskSummaryCard";
 
 export default function ProjectPage() {
+  const session = useSession();
   const router = useRouter();
   const { projectId } = router.query;
 
+  
   // Fetch project details
   const { data: project, isLoading: projectLoading, refetch: refetchProjects } = api.project.getById.useQuery({ id: projectId as string });
 
@@ -28,6 +31,10 @@ export default function ProjectPage() {
   // State for adding member
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [memberEmail, setMemberEmail] = useState("");
+  if (!session) {
+    return <div>Please log in to view your Project.</div>;
+  }
+
 
   // API call to create task
   const createTaskMutation = api.task.create.useMutation({
