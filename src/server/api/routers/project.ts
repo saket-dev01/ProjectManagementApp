@@ -55,8 +55,8 @@ export const projectRouter = createTRPCRouter({
 
       return updatedProject;
     }),
-    
-    getMembers: protectedProcedure
+
+  getMembers: protectedProcedure
     .input(z.object({ projectId: z.string() })) // Expecting projectId as input
     .query(async ({ ctx, input }) => {
       const { projectId } = input;
@@ -68,7 +68,7 @@ export const projectRouter = createTRPCRouter({
           members: {
             select: {
               id: true,
-              name: true, // You can include more member fields like email, etc.
+              name: true,
             },
           },
         },
@@ -132,8 +132,8 @@ export const projectRouter = createTRPCRouter({
           description,
           members: members
             ? {
-                set: members.map((userId) => ({ id: userId })),
-              }
+              set: members.map((userId) => ({ id: userId })),
+            }
             : undefined,
         },
       });

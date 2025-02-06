@@ -13,7 +13,7 @@ import { format } from "date-fns";
 
 interface CreateTaskFormProps {
     refetch: () => void;
-    projectId: string; // Add projectId to the props
+    projectId: string;
 }
 
 const CreateTaskForm: React.FC<CreateTaskFormProps> = ({ refetch, projectId }) => {

@@ -17,12 +17,10 @@ export default function ProjectsPage() {
 
     if (!session) {
         return <div>Please log in to view your Projects.</div>;
-      }
+    }
 
-    // Fetch all projects
     const { data: projects, isLoading, refetch } = api.project.getAll.useQuery();
 
-    // Mutations
     const createProject = api.project.create.useMutation({
         onSuccess: () => {
             void refetch();
@@ -39,7 +37,7 @@ export default function ProjectsPage() {
         },
     });
 
-    // Handle creating a new project
+
     const handleCreateProject = async () => {
         if (!newProjectName.trim()) {
             return;
@@ -49,7 +47,7 @@ export default function ProjectsPage() {
                 name: newProjectName,
                 description: newProjectDescription,
             });
-            await refetch(); // Await the refetch call
+            await refetch();
             setNewProjectName("");
             setNewProjectDescription("");
         } catch (error) {
@@ -66,7 +64,7 @@ export default function ProjectsPage() {
                 projectId: selectedProjectId,
                 email: memberEmail,
             });
-            await refetch(); // Await the refetch call
+            await refetch();
             setMemberEmail("");
         } catch (error) {
             console.error("Failed to add member", error);
@@ -79,29 +77,27 @@ export default function ProjectsPage() {
     return (
         <div className="p-6">
             <h1 className="text-2xl font-bold mb-4">Projects</h1>
-
-            {/* Add Project Dialog */}
             <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button className="mb-4">+ Add Project</Button>
-            </DialogTrigger>
-            <DialogContent>
-                <h2 className="text-lg font-semibold mb-2">Create New Project</h2>
-                <Input 
-                    placeholder="Project Name" 
-                    value={newProjectName} 
-                    onChange={(e) => setNewProjectName(e.target.value)}
-                />
-                <Input 
-                    placeholder="Description (optional)" 
-                    value={newProjectDescription} 
-                    onChange={(e) => setNewProjectDescription(e.target.value)}
-                />
-                <Button onClick={handleCreateProject} className="mt-2 w-full">
-                    {createProject.isPending ? "Creating..." : "Create"}
-                </Button>
-            </DialogContent>
-        </Dialog>
+                <DialogTrigger asChild>
+                    <Button className="mb-4">+ Add Project</Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <h2 className="text-lg font-semibold mb-2">Create New Project</h2>
+                    <Input
+                        placeholder="Project Name"
+                        value={newProjectName}
+                        onChange={(e) => setNewProjectName(e.target.value)}
+                    />
+                    <Input
+                        placeholder="Description (optional)"
+                        value={newProjectDescription}
+                        onChange={(e) => setNewProjectDescription(e.target.value)}
+                    />
+                    <Button onClick={handleCreateProject} className="mt-2 w-full">
+                        {createProject.isPending ? "Creating..." : "Create"}
+                    </Button>
+                </DialogContent>
+            </Dialog>
 
             <ul className="space-y-3">
                 {projects.map((project) => (

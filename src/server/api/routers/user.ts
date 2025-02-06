@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 export const userRouter = createTRPCRouter({
-  // Get all users
+
   getAll: protectedProcedure.query(async ({ ctx }) => {
     const users = await ctx.db.user.findMany({
       select: {
@@ -17,7 +17,7 @@ export const userRouter = createTRPCRouter({
     return users;
   }),
 
-  // Get a single user by ID
+
   getById: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -41,7 +41,6 @@ export const userRouter = createTRPCRouter({
       return user;
     }),
 
-  // Get the currently authenticated user
   getCurrentUser: protectedProcedure.query(async ({ ctx }) => {
     const user = await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
@@ -63,7 +62,6 @@ export const userRouter = createTRPCRouter({
     return user;
   }),
 
-  // Search users by name or email
   search: protectedProcedure
     .input(z.object({ query: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
