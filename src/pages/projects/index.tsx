@@ -15,9 +15,7 @@ export default function ProjectsPage() {
     const [memberEmail, setMemberEmail] = useState("");
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
-    if (!session) {
-        return <div>Please log in to view your Projects.</div>;
-    }
+   
 
     const { data: projects, isLoading, refetch } = api.project.getAll.useQuery();
 
@@ -70,9 +68,11 @@ export default function ProjectsPage() {
             console.error("Failed to add member", error);
         }
     };
-
+    if (!session) {
+        return <div>Please log in to view your Projects.</div>;
+    }
     if (isLoading) return <p className="text-gray-500">Loading...</p>;
-    if (!projects || projects.length === 0) return <p className="text-gray-500">No projects found.</p>;
+    //if (!projects || projects.length === 0) return <p className="text-gray-500">No projects found.</p>;
 
     return (
         <div className="p-6">
@@ -100,7 +100,7 @@ export default function ProjectsPage() {
             </Dialog>
 
             <ul className="space-y-3">
-                {projects.map((project) => (
+                {projects? projects.map((project) => (
                     <li
                         key={project.id}
                         className="p-4 border rounded-md shadow cursor-pointer hover:bg-gray-100"
@@ -109,7 +109,7 @@ export default function ProjectsPage() {
                         <h2 className="text-lg font-semibold">{project.name}</h2>
                         <p className="text-gray-600">{project.description || "No description available"}</p>
                     </li>
-                ))}
+                )) : ""}
             </ul>
         </div>
     );
